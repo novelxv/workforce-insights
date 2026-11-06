@@ -28,22 +28,26 @@ Gender and age are deliberately **not** features; they are used only in the audi
 ## Results on the test months
 
 - Base rate: 7.4% of employee-months are followed by a voluntary exit within six months.
-- ROC-AUC 0.614, PR-AUC 0.097 (a random ranking would score PR-AUC ≈ 0.074).
-- Brier score 0.0691 before calibration, 0.0693 after.
+- ROC-AUC 0.619, PR-AUC 0.099 (a random ranking would score PR-AUC ≈ 0.074).
+- Brier score 0.0691 before calibration, 0.0688 after (Platt scaling; isotonic regression was tried and made it worse).
+- Calibrated probabilities average 6.0% on the test months against 7.4% observed. The calibration was fitted on the validation months, when 5.8% resigned, so the levels run low when the rate rises. The ranking, which is what the risk list uses, is unaffected; recalibrate on recent months before reading the probabilities as levels.
 - **Ceiling:** ranking the same rows by the true planted formula (which no real dataset would have, and without the unobserved personal factor) scores ROC-AUC 0.641 and PR-AUC 0.132. Most of the distance to a perfect score is noise in who decides to leave, not something better modelling could recover.
-- Scoring a single month (2025-11-01, 743 employees, 47 of whom resigned within six months): the top 10% (74 people) contained 21% of those leavers, a lift of 2.14× over picking at random.
+- Scoring a single month (2025-11-01, 743 employees, 47 of whom resigned within six months): the top 10% (74 people) contained 19% of those leavers, a lift of 1.92× over picking at random.
 
-### Calibration (test months, deciles of predicted probability)
+### Calibration (test months, deciles of the score)
 
 | Decile | Predicted | Observed | n |
 |---|---|---|---|
-| 1 | 0.019 | 0.036 | 1511 |
-| 2 | 0.050 | 0.083 | 1083 |
-| 3 | 0.059 | 0.101 | 426 |
-| 4 | 0.062 | 0.123 | 154 |
-| 5 | 0.088 | 0.086 | 758 |
-| 6 | 0.095 | 0.127 | 229 |
-| 7 | 0.209 | 0.101 | 287 |
+| 1 | 0.017 | 0.016 | 445 |
+| 2 | 0.024 | 0.065 | 447 |
+| 3 | 0.030 | 0.022 | 444 |
+| 4 | 0.036 | 0.056 | 443 |
+| 5 | 0.043 | 0.074 | 445 |
+| 6 | 0.052 | 0.106 | 445 |
+| 7 | 0.062 | 0.112 | 445 |
+| 8 | 0.076 | 0.068 | 444 |
+| 9 | 0.099 | 0.110 | 445 |
+| 10 | 0.160 | 0.110 | 445 |
 
 ## What drives the scores
 
@@ -68,23 +72,23 @@ works; it says nothing about which drivers matter in a real workforce.
 
 ## Fairness audit
 
-Flags are the top 10% of scores on the test months (threshold 0.0945).
+Flags are the top 10% of scores on the test months (threshold 0.1465).
 
-**Gender** (flag-rate ratio, smallest over largest group with n ≥ 100: 0.803)
-
-| Group | n | Observed rate | Mean predicted | Flag rate | Recall |
-|---|---|---|---|---|---|
-| F | 2,334 | 0.081 | 0.062 | 0.128 | 0.228 |
-| M | 2,114 | 0.066 | 0.058 | 0.103 | 0.107 |
-
-**Age band** (flag-rate ratio, smallest over largest group with n ≥ 100: 0.155)
+**Gender** (flag-rate ratio, smallest over largest group with n ≥ 100: 0.778)
 
 | Group | n | Observed rate | Mean predicted | Flag rate | Recall |
 |---|---|---|---|---|---|
-| 25-34 | 2,765 | 0.083 | 0.066 | 0.144 | 0.171 |
-| 35-44 | 1,359 | 0.048 | 0.041 | 0.038 | 0.138 |
-| 45-54 | 81 | 0.000 | 0.058 | 0.074 | — |
-| <25 | 243 | 0.148 | 0.093 | 0.247 | 0.278 |
+| F | 2,334 | 0.081 | 0.062 | 0.112 | 0.201 |
+| M | 2,114 | 0.066 | 0.057 | 0.087 | 0.079 |
+
+**Age band** (flag-rate ratio, smallest over largest group with n ≥ 100: 0.116)
+
+| Group | n | Observed rate | Mean predicted | Flag rate | Recall |
+|---|---|---|---|---|---|
+| 25-34 | 2,765 | 0.083 | 0.066 | 0.126 | 0.149 |
+| 35-44 | 1,359 | 0.048 | 0.043 | 0.027 | 0.092 |
+| 45-54 | 81 | 0.000 | 0.057 | 0.049 | — |
+| <25 | 243 | 0.148 | 0.087 | 0.235 | 0.25 |
 
 Equal flag rates are not the goal when underlying rates differ; the table shows whether flags
 track observed outcomes in each group. Large gaps between *observed rate* and *mean predicted*

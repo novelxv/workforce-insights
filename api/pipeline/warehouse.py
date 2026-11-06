@@ -105,6 +105,7 @@ CREATE TABLE fact_attrition_score (
   scored_month date NOT NULL,
   employee_id int NOT NULL,
   probability numeric(6,4) NOT NULL,
+  rank int NOT NULL,
   risk_band text NOT NULL,
   drivers jsonb NOT NULL,
   model_version text NOT NULL,

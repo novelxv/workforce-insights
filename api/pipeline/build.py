@@ -79,7 +79,13 @@ def write_docs(trained: mdl.TrainedModel, end: date, counts: dict | None) -> Non
         "",
         f"- Base rate: {m['base_rate'] * 100:.1f}% of employee-months are followed by a voluntary exit within six months.",
         f"- ROC-AUC {m['roc_auc']}, PR-AUC {m['pr_auc']} (a random ranking would score PR-AUC ≈ {m['base_rate']:.3f}).",
-        f"- Brier score {m['brier_raw']} before calibration, {m['brier_calibrated']} after.",
+        f"- Brier score {m['brier_raw']} before calibration, {m['brier_calibrated']} after (Platt scaling;"
+        f" isotonic regression was tried and made it worse).",
+        f"- Calibrated probabilities average {m['mean_predicted'] * 100:.1f}% on the test months against"
+        f" {m['base_rate'] * 100:.1f}% observed. The calibration was fitted on the validation months, when"
+        f" {m['valid_base_rate'] * 100:.1f}% resigned, so the levels run low when the rate rises. The ranking,"
+        f" which is what the risk list uses, is unaffected; recalibrate on recent months before reading the"
+        f" probabilities as levels.",
         f"- **Ceiling:** ranking the same rows by the true planted formula (which no real dataset would"
         f" have, and without the unobserved personal factor) scores ROC-AUC {m['ceiling']['roc_auc']} and"
         f" PR-AUC {m['ceiling']['pr_auc']}. Most of the distance to a perfect score is noise in who decides"
@@ -88,7 +94,7 @@ def write_docs(trained: mdl.TrainedModel, end: date, counts: dict | None) -> Non
         f" within six months): the top 10% ({pit['top_10pct']['flagged']} people) contained"
         f" {pit['top_10pct']['recall'] * 100:.0f}% of those leavers, a lift of {pit['top_10pct']['lift']}× over picking at random.",
         "",
-        "### Calibration (test months, deciles of predicted probability)",
+        "### Calibration (test months, deciles of the score)",
         "",
         "| Decile | Predicted | Observed | n |",
         "|---|---|---|---|",
@@ -193,7 +199,7 @@ def main() -> None:
             counts = build_warehouse(conn, sim)
             with conn.cursor() as cur:
                 with cur.copy(
-                    "COPY fact_attrition_score (scored_month, employee_id, probability, risk_band, drivers, model_version) FROM STDIN"
+                    "COPY fact_attrition_score (scored_month, employee_id, probability, rank, risk_band, drivers, model_version) FROM STDIN"
                 ) as cp:
                     for r in scores.itertuples():
                         cp.write_row(
@@ -201,6 +207,7 @@ def main() -> None:
                                 r.month,
                                 r.employee_id,
                                 r.probability,
+                                r.rank,
                                 r.risk_band,
                                 json.dumps(r.drivers),
                                 trained.version,

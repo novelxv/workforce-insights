@@ -166,7 +166,7 @@ def employees(
                 "   ON h.employee_id = s.employee_id AND h.month = s.scored_month"
                 " JOIN dim_employee e ON e.employee_key = h.employee_key"
                 f" WHERE {' AND '.join(where)}"
-                " ORDER BY s.probability DESC, e.employee_no LIMIT :limit"
+                " ORDER BY s.rank LIMIT :limit"
             ),
             params,
         )

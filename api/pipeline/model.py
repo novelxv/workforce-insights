@@ -6,8 +6,10 @@ Design choices, each to keep the model honest:
   months whose six-month outcome is known. A random split would leak an employee's future
   into their own training rows.
 * Gender and age are not features. They are used only to audit the scores.
-* Probabilities are calibrated (isotonic, fitted on the validation months), so "25%" means
-  roughly one in four.
+* Probabilities are calibrated with Platt scaling fitted on the validation months.
+  Isotonic regression was tried first: with about 250 leavers in validation its step
+  function overfit (worse Brier and log loss on the test months, a 0% bottom step, and
+  ties that made the ranking arbitrary). Ranking always uses the raw score.
 * Explanations come from LightGBM's own TreeSHAP contributions (pred_contrib), translated
   into sentences an HRBP can act on.
 * The simulation's planted drivers are known, so the report checks the model found them.
@@ -21,7 +23,7 @@ from datetime import date
 import lightgbm as lgb
 import numpy as np
 import pandas as pd
-from sklearn.isotonic import IsotonicRegression
+from sklearn.linear_model import LogisticRegression
 from sklearn.metrics import average_precision_score, brier_score_loss, roc_auc_score
 
 from pipeline.simulate import DEPARTMENTS, age_band, planted_hazard
@@ -57,11 +59,27 @@ PARAMS = {
 }
 
 
+class Platt:
+    """Logistic recalibration of the booster's probability on its log-odds."""
+
+    def fit(self, raw: np.ndarray, y: np.ndarray) -> Platt:
+        self._lr = LogisticRegression(C=1e6).fit(_logit(raw).reshape(-1, 1), y)
+        return self
+
+    def predict(self, raw: np.ndarray) -> np.ndarray:
+        return self._lr.predict_proba(_logit(np.asarray(raw)).reshape(-1, 1))[:, 1]
+
+
+def _logit(p: np.ndarray) -> np.ndarray:
+    p = np.clip(p, 1e-6, 1 - 1e-6)
+    return np.log(p / (1 - p))
+
+
 @dataclass
 class TrainedModel:
     version: str
     booster: lgb.Booster
-    calibrator: IsotonicRegression
+    calibrator: Platt
     metrics: dict
     fairness: dict
     importance: list[dict]
@@ -129,9 +147,7 @@ def train(
         callbacks=[lgb.early_stopping(80, verbose=False)],
     )
     raw_valid = booster.predict(part["valid"][FEATURES], num_iteration=booster.best_iteration)
-    calibrator = IsotonicRegression(out_of_bounds="clip", y_min=0.0, y_max=1.0).fit(
-        raw_valid, part["valid"]["label"]
-    )
+    calibrator = Platt().fit(raw_valid, part["valid"]["label"].to_numpy())
 
     test = part["test"]
     raw_test = booster.predict(test[FEATURES], num_iteration=booster.best_iteration)
@@ -141,18 +157,22 @@ def train(
     # The way the model is used: score one month, look six months ahead.
     point_t = splits["test"][0]
     point = test["t"] == point_t
-    yp, pp = y[point.to_numpy()], cal_test[point.to_numpy()]
+    # Ranking metrics use the raw score, the same order the scored list uses.
+    # Probabilities shown to people, and the Brier score, are calibrated.
+    yp, pp = y[point.to_numpy()], raw_test[point.to_numpy()]
 
     metrics = {
         "rows": {k: int(len(v)) for k, v in part.items()},
         "best_iteration": int(booster.best_iteration),
         "test_months": [str(months[splits["test"][0]]), str(months[splits["test"][1]])],
         "base_rate": round(float(y.mean()), 4),
-        "roc_auc": round(float(roc_auc_score(y, cal_test)), 3),
-        "pr_auc": round(float(average_precision_score(y, cal_test)), 3),
+        "valid_base_rate": round(float(part["valid"]["label"].mean()), 4),
+        "mean_predicted": round(float(cal_test.mean()), 4),
+        "roc_auc": round(float(roc_auc_score(y, raw_test)), 3),
+        "pr_auc": round(float(average_precision_score(y, raw_test)), 3),
         "brier_raw": round(float(brier_score_loss(y, raw_test)), 4),
         "brier_calibrated": round(float(brier_score_loss(y, cal_test)), 4),
-        "top_10pct_all_test_months": _top_k_stats(y, cal_test),
+        "top_10pct_all_test_months": _top_k_stats(y, raw_test),
         "point_in_time": {
             "month": str(months[point_t]),
             "employees": int(point.sum()),
@@ -162,8 +182,9 @@ def train(
         },
     }
 
-    # Calibration by decile of predicted probability.
-    deciles = pd.qcut(cal_test, 10, labels=False, duplicates="drop")
+    # Calibration by decile of the score (deciles of the calibrated probability would
+    # collapse, since it takes only a handful of distinct values).
+    deciles = pd.qcut(raw_test, 10, labels=False, duplicates="drop")
     calibration = [
         {
             "bucket": int(b),
@@ -192,7 +213,7 @@ def train(
     )
 
     metrics["ceiling"] = ceiling(test, y, point.to_numpy())
-    fairness = audit(test.assign(prob=cal_test), y)
+    fairness = audit(test.assign(prob=cal_test, score=raw_test), y)
     model = TrainedModel(
         version=f"lgbm-{months[last]:%Y%m}-s{seed}",
         booster=booster,
@@ -237,8 +258,8 @@ def ceiling(test: pd.DataFrame, y: np.ndarray, point: np.ndarray) -> dict:
 def audit(test: pd.DataFrame, y: np.ndarray) -> dict:
     """Score distribution and top-10% flags by gender and age band (not model inputs)."""
     k = max(1, int(round(len(test) * 0.1)))
-    threshold = np.sort(test["prob"].to_numpy())[-k]
-    test = test.assign(y=y, flagged=test["prob"] >= threshold)
+    threshold = np.sort(test["score"].to_numpy())[-k]
+    test = test.assign(y=y, flagged=test["score"] >= threshold)
     out: dict = {"threshold_top_10pct": round(float(threshold), 4)}
     for attr in ("gender", "age_band"):
         rows = []
@@ -305,8 +326,9 @@ def score(model: TrainedModel, current: pd.DataFrame) -> pd.DataFrame:
     )
     out = current[["employee_id", "month"]].copy()
     out["probability"] = np.round(prob, 4)
-    ranks = pd.Series(prob).rank(ascending=False, method="first").to_numpy()
+    ranks = pd.Series(raw).rank(ascending=False, method="first").to_numpy().astype(int)
     n = len(prob)
+    out["rank"] = ranks
     out["risk_band"] = np.where(
         ranks <= n * 0.1, "high", np.where(ranks <= n * 0.3, "elevated", "low")
     )
