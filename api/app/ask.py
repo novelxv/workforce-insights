@@ -89,15 +89,20 @@ DEPARTMENTS: dict[str, list[str]] = {
     "UW": ["underwriting", "underwriters"],
     "CLM": ["claims", "claim", "klaim"],
     "POL": ["policy administration", "policy admin", "policy servicing"],
-    "CSV": ["customer service", "customer care", "contact centre", "contact center",
-            "call centre", "call center"],
+    "CSV": [
+        "customer service",
+        "customer care",
+        "contact centre",
+        "contact center",
+        "call centre",
+        "call center",
+    ],
     "ITD": ["information technology", "it department", "it team"],
     "GAF": ["general affairs"],
     "BAN": ["bancassurance", "banca"],
     "AGY": ["agency development", "agency"],
     "MKT": ["marketing & product", "marketing and product", "marketing"],
-    "FIN": ["finance & accounting", "finance and accounting", "finance", "accounting",
-            "keuangan"],
+    "FIN": ["finance & accounting", "finance and accounting", "finance", "accounting", "keuangan"],
     "INV": ["investment", "investments", "investasi"],
     "CMP": ["compliance", "aml/cft", "kepatuhan"],
     "RSK": ["risk management", "risk team", "manajemen risiko"],
@@ -116,8 +121,15 @@ LOCATIONS = {
 }  # fmt: skip
 FEMALE = ["women", "woman", "female", "females", "ladies", "perempuan", "wanita"]
 MALE = ["men", "man", "male", "males", "pria", "laki-laki"]
-PKWT = ["pkwt", "fixed-term", "fixed term", "contract staff", "contractors", "contract workers",
-        "kontrak"]
+PKWT = [
+    "pkwt",
+    "fixed-term",
+    "fixed term",
+    "contract staff",
+    "contractors",
+    "contract workers",
+    "kontrak",
+]
 PKWTT = ["pkwtt", "permanent", "tetap"]
 AGE_PATTERNS = {
     "<25": [r"(under|below|younger than|less than) 25", r"<\s?25", r"gen z"],
@@ -137,8 +149,13 @@ TENURE_PATTERNS = {
 # Single words that name a metric only when nothing more specific is in the question:
 # "women" is the female-share metric in "what share are women?" but a filter in
 # "resignations among women".
-WEAK_METRIC = {"women": "female_share", "woman": "female_share", "female": "female_share",
-               "tenure": "avg_tenure_years", "masa kerja": "avg_tenure_years"}
+WEAK_METRIC = {
+    "women": "female_share",
+    "woman": "female_share",
+    "female": "female_share",
+    "tenure": "avg_tenure_years",
+    "masa kerja": "avg_tenure_years",
+}
 EXTRA_METRIC = {
     "avg_tenure_years": ["average tenure", "avg tenure", "rata-rata masa kerja"],
     "exits": ["people left", "left", "keluar", "exit", "leaver", "separation"],
@@ -146,21 +163,42 @@ EXTRA_METRIC = {
     "hires": ["joined", "hiring", "new employees", "karyawan baru"],
     "avg_overtime_hours": ["overtime per person"],
 }
-HEADCOUNT_CUES = ["how many people", "how many employees", "how many staff", "employees",
-                  "staff", "people", "karyawan", "pegawai", "workforce", "berapa orang"]
+HEADCOUNT_CUES = [
+    "how many people",
+    "how many employees",
+    "how many staff",
+    "employees",
+    "staff",
+    "people",
+    "karyawan",
+    "pegawai",
+    "workforce",
+    "berapa orang",
+]
 DIM_PREFIX = (
     r"(?:by|per|across|for each|for every|in each|each|every|split by|broken down by|"
     r"breakdown by|break down by|grouped by|which|what|top \d+|bottom \d+|lowest \d+|"
     r"highest \d+|\d+)"
 )
 TIME_CUES = {
-    "month": ["monthly", "trend", "over time", "month by month", "month-on-month",
-              "bulanan", "tren"],
+    "month": [
+        "monthly",
+        "trend",
+        "over time",
+        "month by month",
+        "month-on-month",
+        "bulanan",
+        "tren",
+    ],
     "quarter": ["quarterly", "quarter by quarter"],
     "year": ["yearly", "year by year", "year-on-year", "tahunan"],
 }
-EXTRA_DIM = {"location": ["branches", "branch offices"], "age_band": ["age groups", "ages"],
-             "tenure_band": ["tenure bands"], "department": ["departemen"]}
+EXTRA_DIM = {
+    "location": ["branches", "branch offices"],
+    "age_band": ["age groups", "ages"],
+    "tenure_band": ["tenure bands"],
+    "department": ["departemen"],
+}
 
 
 def _w(phrase: str) -> str:
@@ -214,8 +252,10 @@ def _period(t: Text, latest: date) -> tuple[date, date] | None:
     if m := t.take(rf"(?:last|past|previous) {NUM_RE} years?"):
         n = _num(m.group(1))
         return add_months(latest, -(12 * n - 1)), latest
-    if t.take(r"(?:the )?(?:past year|last twelve months|trailing 12 months|rolling 12 months"
-              r"|ttm|setahun terakhir)"):
+    if t.take(
+        r"(?:the )?(?:past year|last twelve months|trailing 12 months|rolling 12 months"
+        r"|ttm|setahun terakhir)"
+    ):
         return add_months(latest, -11), latest
     if t.take(r"(?:last year|previous year|tahun lalu)"):
         return date(y - 1, 1, 1), date(y - 1, 12, 1)
@@ -236,8 +276,10 @@ def _period(t: Text, latest: date) -> tuple[date, date] | None:
     if m := t.take(rf"between {MONTH_RE}(?: (\d{{4}}))? and {MONTH_RE} (\d{{4}})"):
         y2 = int(m.group(4))
         return date(int(m.group(2) or y2), MONTHS[m.group(1)], 1), date(y2, MONTHS[m.group(3)], 1)
-    if m := t.take(rf"from {MONTH_RE}(?: (\d{{4}}))? (?:to|until|through|till) {MONTH_RE}"
-                   rf"(?: (\d{{4}}))?"):
+    if m := t.take(
+        rf"from {MONTH_RE}(?: (\d{{4}}))? (?:to|until|through|till) {MONTH_RE}"
+        rf"(?: (\d{{4}}))?"
+    ):
         y2 = int(m.group(4) or m.group(2) or y)
         return date(int(m.group(2) or y2), MONTHS[m.group(1)], 1), date(y2, MONTHS[m.group(3)], 1)
     if m := t.take(rf"(?:since|sejak) {MONTH_RE} (\d{{4}})"):
@@ -270,8 +312,10 @@ def parse_rules(question: str, latest: date) -> Parsed:
     ):
         out.unsupported = INDIVIDUALS
         return out
-    if t.has(r"(?<![a-z])(will|forecast|predict|prediction|projection|projected|expected to|"
-             r"next (year|month|quarter|six months))(?![a-z])"):
+    if t.has(
+        r"(?<![a-z])(will|forecast|predict|prediction|projection|projected|expected to|"
+        r"next (year|month|quarter|six months))(?![a-z])"
+    ):
         out.unsupported = FORECAST
         return out
     if t.has(r"^ why |(?<![a-z])why (is|are|did|do|does|has|have)(?![a-z])|mengapa|kenapa"):
@@ -282,8 +326,10 @@ def parse_rules(question: str, latest: date) -> Parsed:
 
     order: str | None = None
     limit: int | None = None
-    if m := t.find(r"(?:top|highest|largest|biggest|most) (\d+)|(\d+) (?:highest|largest|"
-                   r"biggest|worst)"):
+    if m := t.find(
+        r"(?:top|highest|largest|biggest|most) (\d+)|(\d+) (?:highest|largest|"
+        r"biggest|worst)"
+    ):
         order, limit = "value_desc", int(m.group(1) or m.group(2))
     elif m := t.find(r"(?:bottom|lowest|smallest|fewest|least) (\d+)|(\d+) (?:lowest|smallest)"):
         order, limit = "value_asc", int(m.group(1) or m.group(2))
@@ -296,16 +342,42 @@ def parse_rules(question: str, latest: date) -> Parsed:
         if m := t.take(pattern):
             found.append((m.start(), key))
             if m.group(0).lstrip().startswith(("which", "what")) and order is None:
-                order = "value_asc" if t.has(_any(["lowest", "least", "fewest", "smallest"])) \
+                order = (
+                    "value_asc"
+                    if t.has(_any(["lowest", "least", "fewest", "smallest"]))
                     else "value_desc"
+                )
+    # "by department and gender": a second dimension joined to a phrase already taken.
+    # Taken phrases are blanked to spaces, so two spaces mark where one ended.
+    if found:
+        for key, dim in DIMENSIONS.items():
+            if any(k == key for _, k in found):
+                continue
+            alts = [s for s in dim.synonyms if s not in TIME_CUES.get(key, [])]
+            alts += EXTRA_DIM.get(key, [])
+            if m := t.take(rf"(?<=  )(?:and|&) (?:by )?(?:the )?{_any(alts)}"):
+                found.append((m.start(), key))
     for key, cues in TIME_CUES.items():
         if not any(k == key for _, k in found) and (m := t.take(_any(cues))):
             found.append((m.start(), key))
     found.sort()
     dimensions = [k for _, k in found]
     if order is None and dimensions and not DIMENSIONS[dimensions[0]].time:
-        if t.has(_any(["highest", "most", "largest", "biggest", "worst", "rank", "ranked",
-                       "ranking", "tertinggi"])):
+        if t.has(
+            _any(
+                [
+                    "highest",
+                    "most",
+                    "largest",
+                    "biggest",
+                    "worst",
+                    "rank",
+                    "ranked",
+                    "ranking",
+                    "tertinggi",
+                ]
+            )
+        ):
             order = "value_desc"
         elif t.has(_any(["lowest", "least", "fewest", "smallest", "terendah"])):
             order = "value_asc"
@@ -343,8 +415,9 @@ def parse_rules(question: str, latest: date) -> Parsed:
         add("employment_type", "PKWTT")
     if t.take(_any(PKWT)):
         add("employment_type", "PKWT")
-    share_cue = t.has(_any(["share", "percentage", "percent", "proportion", "ratio", "%",
-                            "persentase", "porsi"]))
+    share_cue = t.has(
+        _any(["share", "percentage", "percent", "proportion", "ratio", "%", "persentase", "porsi"])
+    )
     female, male = t.find(_any(FEMALE)), t.find(_any(MALE))
 
     # Metric: the longest specific phrase wins; weak words and generic cues are fallbacks.
@@ -368,8 +441,11 @@ def parse_rules(question: str, latest: date) -> Parsed:
     if metric == "exits" and voluntary:
         metric = "voluntary_exits"
     if rate and metric in ("exits", "voluntary_exits", "promotions"):
-        metric = {"exits": "turnover_rate", "voluntary_exits": "voluntary_turnover_rate",
-                  "promotions": "promotion_rate"}[metric]
+        metric = {
+            "exits": "turnover_rate",
+            "voluntary_exits": "voluntary_turnover_rate",
+            "promotions": "promotion_rate",
+        }[metric]
     if metric in (None, "headcount") and share_cue and "PKWT" in filters.get("employment_type", []):
         metric = "pkwt_share"
     if metric in (None, "headcount") and share_cue and female:
@@ -462,9 +538,13 @@ Question: {question}
 
 
 def _gemini_schema() -> dict:
-    values = sorted({v for d in STATIC_DOMAINS.values() for v in d}
-                    | set(DEPARTMENTS) | set(LOCATIONS)
-                    | {f"G{i}" for i in range(1, 8)} | {d.capitalize() for d in DIVISIONS})
+    values = sorted(
+        {v for d in STATIC_DOMAINS.values() for v in d}
+        | set(DEPARTMENTS)
+        | set(LOCATIONS)
+        | {f"G{i}" for i in range(1, 8)}
+        | {d.capitalize() for d in DIVISIONS}
+    )
     return {
         "type": "OBJECT",
         "properties": {
@@ -477,8 +557,10 @@ def _gemini_schema() -> dict:
                 "items": {
                     "type": "OBJECT",
                     "properties": {
-                        "dimension": {"type": "STRING",
-                                      "enum": [d for d in DIMENSIONS if not DIMENSIONS[d].time]},
+                        "dimension": {
+                            "type": "STRING",
+                            "enum": [d for d in DIMENSIONS if not DIMENSIONS[d].time],
+                        },
                         "values": {"type": "ARRAY", "items": {"type": "STRING", "enum": values}},
                     },
                     "required": ["dimension", "values"],
@@ -489,8 +571,17 @@ def _gemini_schema() -> dict:
             "order": {"type": "STRING", "enum": ["none", "value_desc", "value_asc"]},
             "limit": {"type": "INTEGER"},
         },
-        "required": ["supported", "reason", "metric", "dimensions", "filters", "period_start",
-                     "period_end", "order", "limit"],
+        "required": [
+            "supported",
+            "reason",
+            "metric",
+            "dimensions",
+            "filters",
+            "period_start",
+            "period_end",
+            "order",
+            "limit",
+        ],
     }
 
 
@@ -504,8 +595,14 @@ def _prompt(question: str, latest: date, first: date, domains: dict[str, dict[st
         f"- {dim}: " + "; ".join(f"{code} = {label}" for code, label in vals.items())
         for dim, vals in domains.items()
     )
-    return PROMPT.format(latest=latest.strftime("%Y-%m (%B %Y)"), first=first.strftime("%Y-%m"),
-                         metrics=metrics, dimensions=dims, values=values, question=question)
+    return PROMPT.format(
+        latest=latest.strftime("%Y-%m (%B %Y)"),
+        first=first.strftime("%Y-%m"),
+        metrics=metrics,
+        dimensions=dims,
+        values=values,
+        question=question,
+    )
 
 
 def parse_llm(
