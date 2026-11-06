@@ -678,6 +678,20 @@ def describe(spec: Spec, cat: Catalog) -> str:
     return ", ".join(parts)
 
 
+ORDERED = {"age_band", "tenure_band", "grade", "gender", "employment_type"}
+
+
+def _natural(cat: Catalog, dim: str, value) -> tuple:
+    """Sort key that puts bands in their own order ("<1y" before "10y+"), time in
+    calendar order and named groups alphabetically."""
+    if DIMENSIONS[dim].time:
+        return (0, str(value))
+    if dim in ORDERED:
+        keys = list(cat.domains.get(dim, {}))
+        return (keys.index(value) if value in keys else len(keys), "")
+    return (0, cat.label(dim, value))
+
+
 def run(
     conn: Connection,
     spec: Spec,
@@ -703,6 +717,7 @@ def run(
         rows.append(row)
     if not spec.dimensions and not rows:
         rows = [{"value": None, "population": 0, "suppressed": False}]
+    rows.sort(key=lambda r: tuple(_natural(cat, d, r[d]) for d in spec.dimensions))
     hidden = suppress(rows, min_group_size, m.additive, spec.dimensions)
     if spec.order:
         visible = [r for r in rows if r["value"] is not None]
