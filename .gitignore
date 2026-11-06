@@ -1,0 +1,32 @@
+# Local tooling
+.claude/
+.dist/
+.vscode/
+.idea/
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+.pytest_cache/
+.ruff_cache/
+*.egg-info/
+.coverage
+htmlcov/
+
+# Node / Next.js
+node_modules/
+.next/
+out/
+*.tsbuildinfo
+next-env.d.ts
+.vercel/
+
+# Environment
+.env
+.env.*
+!.env.example
+
+# Generated artifacts
+api/var/
+*.log
