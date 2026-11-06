@@ -24,9 +24,10 @@ import pandas as pd
 from sklearn.isotonic import IsotonicRegression
 from sklearn.metrics import average_precision_score, brier_score_loss, roc_auc_score
 
-from pipeline.simulate import age_band, planted_hazard
+from pipeline.simulate import DEPARTMENTS, age_band, planted_hazard
 
 HORIZON = 6
+DEPARTMENT_NAMES = {code: name for code, name, *_ in DEPARTMENTS}
 FEATURES = [
     "tenure_months",
     "grade_rank",
@@ -283,7 +284,7 @@ def explain(row: pd.Series, contributions: np.ndarray) -> list[dict]:
             if pd.isna(r.pay_change_12m)
             else f"Pay up {r.pay_change_12m * 100:.1f}% in 12 months"
         ),
-        "department": lambda r: f"{r.department} has a high base rate",
+        "department": lambda r: f"{DEPARTMENT_NAMES[r.department]} has a high base rate",
         "location": lambda r: f"{r.location} office",
         "on_pkwt": lambda r: "On a fixed-term contract (PKWT)",
         "grade_rank": lambda r: f"Grade G{int(r.grade_rank)}",
