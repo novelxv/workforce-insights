@@ -2,7 +2,8 @@
 
     dim_department, dim_location, dim_grade, dim_month
     dim_employee            type-2 slowly changing: one row per (department, office, grade) spell
-    fact_headcount_monthly  one row per employee per month they were employed
+    fact_headcount_monthly  one row per employee per month they were employed, with the
+                            month's movements (hired, promoted, transferred, exited) as flags
     fact_movement           hires, exits, promotions, transfers
     fact_attrition_score    written by pipeline.model
 
@@ -79,6 +80,9 @@ CREATE TABLE fact_headcount_monthly (
   active_eom boolean NOT NULL,
   exited boolean NOT NULL,
   exit_type text,
+  hired boolean NOT NULL,
+  promoted boolean NOT NULL,
+  transferred boolean NOT NULL,
   PRIMARY KEY (month, employee_id)
 );
 CREATE INDEX fact_hc_dept ON fact_headcount_monthly (department_code, month);
@@ -251,6 +255,11 @@ def build(conn: psycopg.Connection, sim: Simulation) -> dict[str, int]:
             " (SELECT max(employee_key) FROM dim_employee))"
         )
 
+        # Movement flags on the monthly fact, so every metric can be cut by the same
+        # attributes (the person's department, grade, age band... in that month).
+        flags: dict[tuple[int, date], set[str]] = {}
+        for m in sim.movements:
+            flags.setdefault((m["employee_id"], m["date"].replace(day=1)), set()).add(m["type"])
         counts["fact_headcount_monthly"] = _copy(
             cur,
             "fact_headcount_monthly",
@@ -277,6 +286,9 @@ def build(conn: psycopg.Connection, sim: Simulation) -> dict[str, int]:
                 "active_eom",
                 "exited",
                 "exit_type",
+                "hired",
+                "promoted",
+                "transferred",
             ],
             (
                 (
@@ -302,6 +314,9 @@ def build(conn: psycopg.Connection, sim: Simulation) -> dict[str, int]:
                     s["active_eom"],
                     s["exited"],
                     s["exit_type"],
+                    "hire" in flags.get((s["employee_id"], s["month"]), ()),
+                    "promotion" in flags.get((s["employee_id"], s["month"]), ()),
+                    "transfer" in flags.get((s["employee_id"], s["month"]), ()),
                 )
                 for s in sim.snapshots
             ),
