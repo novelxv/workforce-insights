@@ -1,0 +1,45 @@
+{"split": "dev", "q": "What is our headcount?", "expect": {"metric": "headcount", "period": ["2026-10", "2026-10"]}}
+{"split": "dev", "q": "Voluntary turnover rate over the last 12 months", "expect": {"metric": "voluntary_turnover_rate", "period": ["2025-11", "2026-10"]}}
+{"split": "dev", "q": "Turnover by department", "expect": {"metric": "turnover_rate", "dimensions": ["department"], "period": ["2025-11", "2026-10"]}}
+{"split": "dev", "q": "How many people resigned in 2025?", "expect": {"metric": "voluntary_exits", "period": ["2025-01", "2025-12"]}}
+{"split": "dev", "q": "Show hires per month this year", "expect": {"metric": "hires", "dimensions": ["month"], "period": ["2026-01", "2026-10"]}}
+{"split": "dev", "q": "Which department has the highest voluntary attrition?", "expect": {"metric": "voluntary_turnover_rate", "dimensions": ["department"], "period": ["2025-11", "2026-10"], "order": "value_desc"}}
+{"split": "dev", "q": "Top 5 departments by resignations in the past 6 months", "expect": {"metric": "voluntary_exits", "dimensions": ["department"], "period": ["2026-05", "2026-10"], "order": "value_desc", "limit": 5}}
+{"split": "dev", "q": "Headcount by office", "expect": {"metric": "headcount", "dimensions": ["location"], "period": ["2026-10", "2026-10"]}}
+{"split": "dev", "q": "What share of the workforce are women?", "expect": {"metric": "female_share", "period": ["2026-10", "2026-10"]}}
+{"split": "dev", "q": "Women in workforce by grade", "expect": {"metric": "female_share", "dimensions": ["grade"], "period": ["2026-10", "2026-10"]}}
+{"split": "dev", "q": "Average tenure in Customer Service", "expect": {"metric": "avg_tenure_years", "filters": {"department": ["CSV"]}, "period": ["2026-10", "2026-10"]}}
+{"split": "dev", "q": "Exits by tenure band last year", "expect": {"metric": "exits", "dimensions": ["tenure_band"], "period": ["2025-01", "2025-12"]}}
+{"split": "dev", "q": "Monthly voluntary turnover trend for Bancassurance", "expect": {"metric": "voluntary_turnover_rate", "dimensions": ["month"], "filters": {"department": ["BAN"]}, "period": ["2025-11", "2026-10"]}}
+{"split": "dev", "q": "Compa-ratio by gender", "expect": {"metric": "compa_ratio", "dimensions": ["gender"], "period": ["2026-10", "2026-10"]}}
+{"split": "dev", "q": "How many promotions were there in Q2 2026?", "expect": {"metric": "promotions", "period": ["2026-04", "2026-06"]}}
+{"split": "dev", "q": "Promotion rate by grade in 2025", "expect": {"metric": "promotion_rate", "dimensions": ["grade"], "period": ["2025-01", "2025-12"]}}
+{"split": "dev", "q": "First-year attrition over the past 2 years", "expect": {"metric": "early_exit_share", "period": ["2024-11", "2026-10"]}}
+{"split": "dev", "q": "Overtime hours per person by department", "expect": {"metric": "avg_overtime_hours", "dimensions": ["department"], "period": ["2025-11", "2026-10"]}}
+{"split": "dev", "q": "Share of staff on PKWT contracts by department", "expect": {"metric": "pkwt_share", "dimensions": ["department"], "period": ["2026-10", "2026-10"]}}
+{"split": "dev", "q": "Resignations among women in Claims", "expect": {"metric": "voluntary_exits", "filters": {"gender": ["F"], "department": ["CLM"]}, "period": ["2025-11", "2026-10"]}}
+{"split": "dev", "q": "Hires by quarter since January 2025", "expect": {"metric": "hires", "dimensions": ["quarter"], "period": ["2025-01", "2026-10"]}}
+{"split": "dev", "q": "Headcount trend over the last 24 months", "expect": {"metric": "headcount", "dimensions": ["month"], "period": ["2024-11", "2026-10"]}}
+{"split": "dev", "q": "Turnover for employees under 25", "expect": {"metric": "turnover_rate", "filters": {"age_band": ["<25"]}, "period": ["2025-11", "2026-10"]}}
+{"split": "dev", "q": "Voluntary turnover by age group in the operations division", "expect": {"metric": "voluntary_turnover_rate", "dimensions": ["age_band"], "filters": {"division": ["Operations"]}, "period": ["2025-11", "2026-10"]}}
+{"split": "dev", "q": "Internal transfers last quarter", "expect": {"metric": "transfers", "period": ["2026-07", "2026-09"]}}
+{"split": "dev", "q": "Which employees are most likely to resign?", "expect": {"unsupported": true}}
+{"split": "dev", "q": "Berapa jumlah karyawan per departemen?", "expect": {"metric": "headcount", "dimensions": ["department"], "period": ["2026-10", "2026-10"]}}
+{"split": "dev", "q": "Turnover tahun ini", "expect": {"metric": "turnover_rate", "period": ["2026-01", "2026-10"]}}
+{"split": "dev", "q": "How many people left Surabaya in the last 6 months?", "expect": {"metric": "exits", "filters": {"location": ["SBY"]}, "period": ["2026-05", "2026-10"]}}
+{"split": "dev", "q": "What will turnover be next year?", "expect": {"unsupported": true}}
+{"split": "heldout", "q": "Show me attrition across our branches for 2025", "expect": {"metric": "turnover_rate", "dimensions": ["location"], "period": ["2025-01", "2025-12"]}}
+{"split": "heldout", "q": "How many new joiners did Agency Development get this year?", "expect": {"metric": "hires", "filters": {"department": ["AGY"]}, "period": ["2026-01", "2026-10"]}}
+{"split": "heldout", "q": "What percentage of each division is female?", "expect": {"metric": "female_share", "dimensions": ["division"], "period": ["2026-10", "2026-10"]}}
+{"split": "heldout", "q": "Resignation rate for fixed-term staff vs permanent staff", "expect": {"metric": "voluntary_turnover_rate", "dimensions": ["employment_type"], "period": ["2025-11", "2026-10"]}}
+{"split": "heldout", "q": "Number of exits each month in IT", "expect": {"metric": "exits", "dimensions": ["month"], "filters": {"department": ["ITD"]}, "period": ["2025-11", "2026-10"]}}
+{"split": "heldout", "q": "Lowest 3 departments by average tenure", "expect": {"metric": "avg_tenure_years", "dimensions": ["department"], "period": ["2026-10", "2026-10"], "order": "value_asc", "limit": 3}}
+{"split": "heldout", "q": "Quarterly promotions in the Finance division during 2025", "expect": {"metric": "promotions", "dimensions": ["quarter"], "filters": {"division": ["Finance"]}, "period": ["2025-01", "2025-12"]}}
+{"split": "heldout", "q": "Compa ratio for G3 employees in Medan", "expect": {"metric": "compa_ratio", "filters": {"grade": ["G3"], "location": ["MDN"]}, "period": ["2026-10", "2026-10"]}}
+{"split": "heldout", "q": "List the names of people who resigned last month", "expect": {"unsupported": true}}
+{"split": "heldout", "q": "Overtime trend in Claims since March 2026", "expect": {"metric": "avg_overtime_hours", "dimensions": ["month"], "filters": {"department": ["CLM"]}, "period": ["2026-03", "2026-10"]}}
+{"split": "heldout", "q": "Turnover per departemen tahun lalu", "expect": {"metric": "turnover_rate", "dimensions": ["department"], "period": ["2025-01", "2025-12"]}}
+{"split": "heldout", "q": "What proportion of exits happen within the first year, by department?", "expect": {"metric": "early_exit_share", "dimensions": ["department"], "period": ["2025-11", "2026-10"]}}
+{"split": "heldout", "q": "Headcount at the end of June 2026 by grade", "expect": {"metric": "headcount", "dimensions": ["grade"], "period": ["2026-06", "2026-06"]}}
+{"split": "heldout", "q": "Voluntary turnover among women aged 25-34", "expect": {"metric": "voluntary_turnover_rate", "filters": {"gender": ["F"], "age_band": ["25-34"]}, "period": ["2025-11", "2026-10"]}}
+{"split": "heldout", "q": "How many hires in Makassar between April and September 2026?", "expect": {"metric": "hires", "filters": {"location": ["MKS"]}, "period": ["2026-04", "2026-09"]}}
