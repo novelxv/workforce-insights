@@ -1,0 +1,48 @@
+[project]
+name = "workforce-insights-api"
+version = "0.1.0"
+description = "Workforce analytics API: governed metrics, attrition risk scores and exports"
+requires-python = ">=3.12"
+dependencies = [
+  "fastapi>=0.115",
+  "uvicorn[standard]>=0.30",
+  "sqlalchemy>=2.0.30",
+  "psycopg[binary]>=3.2",
+  "pydantic>=2.7",
+  "pydantic-settings>=2.3",
+  "pyjwt>=2.8",
+  "bcrypt>=4.1",
+  "openpyxl>=3.1",
+  "httpx>=0.27",
+]
+
+[project.optional-dependencies]
+# The offline pipeline (simulation, warehouse load, model training) runs locally or in CI,
+# never on the API machine.
+pipeline = ["pandas>=2.2", "numpy>=1.26", "lightgbm>=4.3", "scikit-learn>=1.5"]
+dev = ["pytest>=8", "ruff>=0.5"]
+
+[build-system]
+requires = ["setuptools>=69"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+include = ["app*", "pipeline*"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-q"
+
+[tool.ruff]
+line-length = 100
+target-version = "py312"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "B", "UP", "SIM"]
+
+[tool.ruff.lint.per-file-ignores]
+# Writes markdown documents; long lines are sentences, not code.
+"pipeline/build.py" = ["E501"]
+
+[tool.ruff.lint.flake8-bugbear]
+extend-immutable-calls = ["fastapi.Depends", "fastapi.Query"]
