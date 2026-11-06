@@ -1,0 +1,86 @@
+@import "tailwindcss";
+
+:root {
+  --bg: #f5f4f6;
+  --surface: #ffffff;
+  --surface-2: #faf9fb;
+  --surface-3: #efedf1;
+  --border: #e3e0e6;
+  --border-strong: #cdc9d2;
+  --text: #1b1a1d;
+  --text-2: #504d55;
+  --text-3: #7b7782;
+  --ink: #3b2a5c;
+  --ink-2: #4b376f;
+  --ink-soft: #ece7f4;
+  --link: #1c5cab;
+  /* Data marks use the validated reference palette, not the brand colour. */
+  --series-1: #2a78d6;
+  --grid: #ebe9ee;
+  --critical: #c23232;
+  --critical-soft: #fbeceb;
+  --warning: #8a5a00;
+  --warning-mark: #fab219;
+  --warning-soft: #fdf3dc;
+  --good: #0b7a0b;
+  --good-soft: #e7f4e7;
+}
+
+@theme inline {
+  --color-bg: var(--bg);
+  --color-surface: var(--surface);
+  --color-surface-2: var(--surface-2);
+  --color-surface-3: var(--surface-3);
+  --color-line: var(--border);
+  --color-line-strong: var(--border-strong);
+  --color-fg: var(--text);
+  --color-fg-2: var(--text-2);
+  --color-fg-3: var(--text-3);
+  --color-ink: var(--ink);
+  --color-ink-2: var(--ink-2);
+  --color-ink-soft: var(--ink-soft);
+  --color-link: var(--link);
+  --color-series-1: var(--series-1);
+  --color-grid: var(--grid);
+  --color-critical: var(--critical);
+  --color-critical-soft: var(--critical-soft);
+  --color-warning: var(--warning);
+  --color-warning-soft: var(--warning-soft);
+  --color-good: var(--good);
+  --color-good-soft: var(--good-soft);
+  --font-sans: var(--font-plex-sans);
+  --font-mono: var(--font-plex-mono);
+}
+
+html {
+  background: var(--bg);
+}
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font-plex-sans), system-ui, sans-serif;
+  font-size: 14px;
+  line-height: 1.45;
+}
+
+.tabular {
+  font-variant-numeric: tabular-nums;
+}
+
+:focus-visible {
+  outline: 2px solid var(--series-1);
+  outline-offset: 2px;
+}
+
+dialog::backdrop {
+  background: rgb(27 26 29 / 0.35);
+}
+
+details > summary {
+  cursor: pointer;
+  list-style: none;
+}
+details > summary::-webkit-details-marker {
+  display: none;
+}
