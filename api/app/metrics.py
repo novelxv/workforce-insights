@@ -56,8 +56,15 @@ METRICS: dict[str, Metric] = {
             ACTIVE,
             stock=True,
             additive=True,
-            synonyms=("headcount", "head count", "fte", "workforce size", "jumlah karyawan",
-                      "number of employees", "size of the workforce"),
+            synonyms=(
+                "headcount",
+                "head count",
+                "fte",
+                "workforce size",
+                "jumlah karyawan",
+                "number of employees",
+                "size of the workforce",
+            ),
         ),
         Metric(
             "hires",
@@ -68,14 +75,22 @@ METRICS: dict[str, Metric] = {
             "COUNT(*) FILTER (WHERE h.hired)",
             PEOPLE,
             additive=True,
-            synonyms=("hires", "hired", "new joiners", "joiners", "recruits", "new hires",
-                      "onboarded", "rekrutmen"),
+            synonyms=(
+                "hires",
+                "hired",
+                "new joiners",
+                "joiners",
+                "recruits",
+                "new hires",
+                "onboarded",
+                "rekrutmen",
+            ),
         ),
         Metric(
             "exits",
             "Exits",
             "count",
-            "People who left for any reason: resignation, dismissal, end of contract or retirement.",
+            "People who left for any reason: resignation, dismissal, contract end or retirement.",
             "count of employee-months flagged as the exit month",
             "COUNT(*) FILTER (WHERE h.exited)",
             PEOPLE,
@@ -93,8 +108,15 @@ METRICS: dict[str, Metric] = {
             PEOPLE,
             additive=True,
             higher_is_better=False,
-            synonyms=("resignations", "resigned", "voluntary exits", "voluntary leavers",
-                      "quit", "quits", "resign"),
+            synonyms=(
+                "resignations",
+                "resigned",
+                "voluntary exits",
+                "voluntary leavers",
+                "quit",
+                "quits",
+                "resign",
+            ),
         ),
         Metric(
             "turnover_rate",
@@ -119,8 +141,13 @@ METRICS: dict[str, Metric] = {
             f" / NULLIF({ACTIVE}, 0)",
             PEOPLE,
             higher_is_better=False,
-            synonyms=("voluntary turnover", "voluntary attrition", "resignation rate",
-                      "regretted attrition", "quit rate"),
+            synonyms=(
+                "voluntary turnover",
+                "voluntary attrition",
+                "resignation rate",
+                "regretted attrition",
+                "quit rate",
+            ),
         ),
         Metric(
             "early_exit_share",
@@ -133,8 +160,14 @@ METRICS: dict[str, Metric] = {
             " / NULLIF(COUNT(*) FILTER (WHERE h.exited), 0)",
             "COUNT(*) FILTER (WHERE h.exited)",
             higher_is_better=False,
-            synonyms=("first year attrition", "first-year attrition", "early attrition",
-                      "early exits", "new hire turnover", "first year exits"),
+            synonyms=(
+                "first year attrition",
+                "first-year attrition",
+                "early attrition",
+                "early exits",
+                "new hire turnover",
+                "first year exits",
+            ),
         ),
         Metric(
             "promotion_rate",
@@ -177,8 +210,7 @@ METRICS: dict[str, Metric] = {
             "AVG(h.tenure_months) FILTER (WHERE h.active_eom) / 12.0",
             ACTIVE,
             stock=True,
-            synonyms=("tenure", "length of service", "years of service", "masa kerja",
-                      "how long"),
+            synonyms=("tenure", "length of service", "years of service", "masa kerja", "how long"),
         ),
         Metric(
             "female_share",
@@ -189,8 +221,16 @@ METRICS: dict[str, Metric] = {
             "AVG((h.gender = 'F')::int) FILTER (WHERE h.active_eom)",
             ACTIVE,
             stock=True,
-            synonyms=("female share", "women", "female", "gender ratio", "gender balance",
-                      "gender split", "percentage of women", "female representation"),
+            synonyms=(
+                "female share",
+                "women",
+                "female",
+                "gender ratio",
+                "gender balance",
+                "gender split",
+                "percentage of women",
+                "female representation",
+            ),
         ),
         Metric(
             "pkwt_share",
@@ -201,8 +241,14 @@ METRICS: dict[str, Metric] = {
             "AVG((h.employment_type = 'PKWT')::int) FILTER (WHERE h.active_eom)",
             ACTIVE,
             stock=True,
-            synonyms=("pkwt share", "fixed-term share", "contract staff", "contractors",
-                      "fixed term", "kontrak"),
+            synonyms=(
+                "pkwt share",
+                "fixed-term share",
+                "contract staff",
+                "contractors",
+                "fixed term",
+                "kontrak",
+            ),
         ),
         Metric(
             "compa_ratio",
@@ -214,8 +260,14 @@ METRICS: dict[str, Metric] = {
             "AVG(h.pay_ratio) FILTER (WHERE h.active_eom)",
             ACTIVE,
             stock=True,
-            synonyms=("compa ratio", "compa-ratio", "pay ratio", "pay vs midpoint",
-                      "pay positioning", "salary vs band"),
+            synonyms=(
+                "compa ratio",
+                "compa-ratio",
+                "pay ratio",
+                "pay vs midpoint",
+                "pay positioning",
+                "salary vs band",
+            ),
         ),
         Metric(
             "avg_overtime_hours",
@@ -245,34 +297,107 @@ class Dimension:
 DIMENSIONS: dict[str, Dimension] = {
     d.key: d
     for d in [
-        Dimension("department", "Department", "h.department_code",
-                  synonyms=("department", "departments", "dept", "team", "teams", "unit",
-                            "function", "departemen", "divisi")),
-        Dimension("division", "Division", "dd.division",
-                  synonyms=("division", "divisions", "business unit", "directorate")),
-        Dimension("location", "Office", "h.location_code",
-                  synonyms=("location", "locations", "office", "offices", "branch", "branches",
-                            "city", "cities", "region", "site", "kota", "cabang")),
-        Dimension("grade", "Grade", "h.grade",
-                  synonyms=("grade", "grades", "level", "levels", "band", "seniority")),
-        Dimension("gender", "Gender", "h.gender::text",
-                  synonyms=("gender", "sex", "men and women", "male and female")),
-        Dimension("age_band", "Age band", "h.age_band",
-                  synonyms=("age", "age band", "age group", "age groups", "generation", "usia")),
-        Dimension("tenure_band", "Tenure band", "h.tenure_band",
-                  synonyms=("tenure", "tenure band", "length of service", "years of service")),
-        Dimension("employment_type", "Contract type", "h.employment_type",
-                  synonyms=("contract type", "employment type", "pkwt", "contract",
-                            "permanent vs fixed-term", "status")),
-        Dimension("month", "Month", "h.month", time=True,
-                  synonyms=("month", "monthly", "per month", "each month", "over time",
-                            "trend", "bulan")),
-        Dimension("quarter", "Quarter", "date_trunc('quarter', h.month)::date", time=True,
-                  period_end="(date_trunc('quarter', h.month) + interval '2 months')::date",
-                  synonyms=("quarter", "quarterly", "per quarter", "each quarter")),
-        Dimension("year", "Year", "date_trunc('year', h.month)::date", time=True,
-                  period_end="(date_trunc('year', h.month) + interval '11 months')::date",
-                  synonyms=("year", "yearly", "annual", "per year", "each year", "tahun")),
+        Dimension(
+            "department",
+            "Department",
+            "h.department_code",
+            synonyms=(
+                "department",
+                "departments",
+                "dept",
+                "team",
+                "teams",
+                "unit",
+                "function",
+                "departemen",
+                "divisi",
+            ),
+        ),
+        Dimension(
+            "division",
+            "Division",
+            "dd.division",
+            synonyms=("division", "divisions", "business unit", "directorate"),
+        ),
+        Dimension(
+            "location",
+            "Office",
+            "h.location_code",
+            synonyms=(
+                "location",
+                "locations",
+                "office",
+                "offices",
+                "branch",
+                "branches",
+                "city",
+                "cities",
+                "region",
+                "site",
+                "kota",
+                "cabang",
+            ),
+        ),
+        Dimension(
+            "grade",
+            "Grade",
+            "h.grade",
+            synonyms=("grade", "grades", "level", "levels", "band", "seniority"),
+        ),
+        Dimension(
+            "gender",
+            "Gender",
+            "h.gender::text",
+            synonyms=("gender", "sex", "men and women", "male and female"),
+        ),
+        Dimension(
+            "age_band",
+            "Age band",
+            "h.age_band",
+            synonyms=("age", "age band", "age group", "age groups", "generation", "usia"),
+        ),
+        Dimension(
+            "tenure_band",
+            "Tenure band",
+            "h.tenure_band",
+            synonyms=("tenure", "tenure band", "length of service", "years of service"),
+        ),
+        Dimension(
+            "employment_type",
+            "Contract type",
+            "h.employment_type",
+            synonyms=(
+                "contract type",
+                "employment type",
+                "pkwt",
+                "contract",
+                "permanent vs fixed-term",
+                "status",
+            ),
+        ),
+        Dimension(
+            "month",
+            "Month",
+            "h.month",
+            time=True,
+            synonyms=("month", "monthly", "per month", "each month", "over time", "trend", "bulan"),
+        ),
+        Dimension(
+            "quarter",
+            "Quarter",
+            "date_trunc('quarter', h.month)::date",
+            time=True,
+            period_end="(date_trunc('quarter', h.month) + interval '2 months')::date",
+            synonyms=("quarter", "quarterly", "per quarter", "each quarter"),
+        ),
+        Dimension(
+            "year",
+            "Year",
+            "date_trunc('year', h.month)::date",
+            time=True,
+            period_end="(date_trunc('year', h.month) + interval '11 months')::date",
+            synonyms=("year", "yearly", "annual", "per year", "each year", "tahun"),
+        ),
     ]
 }
 
@@ -415,9 +540,7 @@ def check(spec: Spec, cat: Catalog, scope: tuple[str, ...] | None = None) -> Spe
         if f.dimension == "department" and scope is not None:
             outside = [v for v in f.values if v not in scope]
             if outside:
-                raise SpecError(
-                    f"Outside your departments: {', '.join(outside)}", list(scope)
-                )
+                raise SpecError(f"Outside your departments: {', '.join(outside)}", list(scope))
     start = max(spec.period.start, cat.first_month)
     end = min(spec.period.end, cat.last_month)
     if start > end:
@@ -492,14 +615,13 @@ class Result:
                 "formula": m.formula,
                 "higher_is_better": m.higher_is_better,
             },
-            "dimensions": [
-                {"key": d, "label": DIMENSIONS[d].label} for d in self.spec.dimensions
-            ],
+            "dimensions": [{"key": d, "label": DIMENSIONS[d].label} for d in self.spec.dimensions],
             "rows": self.rows,
             "suppressed": self.suppressed,
             "sql": self.sql,
-            "params": {k: (v.isoformat() if isinstance(v, date) else v)
-                       for k, v in self.params.items()},
+            "params": {
+                k: (v.isoformat() if isinstance(v, date) else v) for k, v in self.params.items()
+            },
         }
 
 
@@ -516,9 +638,7 @@ def suppress(rows: list[dict], k: int, additive: bool, dims: list[str] | None = 
             r["value"], r["suppressed"] = None, True
     if additive:
         dims = dims or []
-        slicers = [lambda r: ()] if len(dims) < 2 else [
-            lambda r, d=d: r[d] for d in dims
-        ]
+        slicers = [lambda r: ()] if len(dims) < 2 else [lambda r, d=d: r[d] for d in dims]
         changed = True
         while changed:
             changed = False

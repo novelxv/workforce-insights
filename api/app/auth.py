@@ -48,13 +48,20 @@ def issue(response: Response, user_id: int) -> None:
         algorithm="HS256",
     )
     response.set_cookie(
-        COOKIE, token, httponly=True, secure=s.cookie_secure, samesite="lax", max_age=s.jwt_ttl_minutes * 60
+        COOKIE,
+        token,
+        httponly=True,
+        secure=s.cookie_secure,
+        samesite="lax",
+        max_age=s.jwt_ttl_minutes * 60,
     )
 
 
 def login(conn: Connection, email: str, password: str):
     row = conn.execute(
-        text("SELECT id, email, password_hash, role, departments, label FROM users WHERE email = :e"),
+        text(
+            "SELECT id, email, password_hash, role, departments, label FROM users WHERE email = :e"
+        ),
         {"e": email.strip().lower()},
     ).first()
     if row is None or not bcrypt.checkpw(password.encode(), row.password_hash.encode()):

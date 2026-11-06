@@ -73,14 +73,21 @@ def main() -> None:
         else:
             parsed = ask.parse_rules(r["q"], LATEST)
         got = normalise(parsed.spec, parsed.unsupported is not None)
-        want = normalise(None, True) if r["expect"].get("unsupported") else normalise(
-            {"dimensions": [], "filters": {}, "order": None, "limit": None} | r["expect"], False
+        want = (
+            normalise(None, True)
+            if r["expect"].get("unsupported")
+            else normalise(
+                {"dimensions": [], "filters": {}, "order": None, "limit": None} | r["expect"], False
+            )
         )
         ok = got == want
         score.setdefault(r["split"], []).append(int(ok))
         if not ok:
-            diff = {k: (want.get(k), got.get(k)) for k in set(want) | set(got)
-                    if want.get(k) != got.get(k)}
+            diff = {
+                k: (want.get(k), got.get(k))
+                for k in set(want) | set(got)
+                if want.get(k) != got.get(k)
+            }
             failures.append((r["split"], r["q"], diff))
 
     name = "gemini" if args.llm else "rules"
