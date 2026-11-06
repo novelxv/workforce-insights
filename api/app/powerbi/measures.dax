@@ -1,0 +1,132 @@
+// Arunika Life workforce measures for Power BI.
+// The same definitions as the app's semantic layer (api/app/metrics.py), so a report
+// built on this extract agrees with the dashboard and the Excel report.
+//
+// Flags in fact_headcount_monthly are 0/1 integers: active_eom, hired, exited, promoted,
+// transferred. One row = one employee in one month they were employed.
+//
+// Create these in a measure table (Home > Enter data > empty table named _Measures), or
+// paste each into New measure. Relationships and the date table are in README.md.
+
+// --- Counts across the period ---------------------------------------------------------
+
+Hires =
+SUM ( fact_headcount_monthly[hired] )
+
+Exits =
+SUM ( fact_headcount_monthly[exited] )
+
+Resignations =
+CALCULATE ( [Exits], fact_headcount_monthly[exit_type] = "voluntary" )
+
+Promotions =
+SUM ( fact_headcount_monthly[promoted] )
+
+Internal Transfers =
+SUM ( fact_headcount_monthly[transferred] )
+
+// Sum of month-end headcounts across the months in context. Average headcount is this
+// divided by the number of months, which is why the annualised rates below reduce to
+// 12 x events / [Headcount Months].
+Headcount Months =
+SUM ( fact_headcount_monthly[active_eom] )
+
+People =
+DISTINCTCOUNT ( fact_headcount_monthly[employee_id] )
+
+// --- Rates (annualised) ---------------------------------------------------------------
+
+Turnover Rate =
+DIVIDE ( 12 * [Exits], [Headcount Months] )
+
+Voluntary Turnover Rate =
+DIVIDE ( 12 * [Resignations], [Headcount Months] )
+
+Promotion Rate =
+DIVIDE ( 12 * [Promotions], [Headcount Months] )
+
+First-year Exit Share =
+DIVIDE (
+    CALCULATE ( [Exits], fact_headcount_monthly[tenure_months] < 12 ),
+    [Exits]
+)
+
+// --- Point in time: the last month in context -----------------------------------------
+
+Headcount =
+VAR LastMonth = MAX ( dim_month[month] )
+RETURN
+    CALCULATE ( SUM ( fact_headcount_monthly[active_eom] ), dim_month[month] = LastMonth )
+
+Average Tenure (years) =
+VAR LastMonth = MAX ( dim_month[month] )
+RETURN
+    DIVIDE (
+        CALCULATE (
+            AVERAGE ( fact_headcount_monthly[tenure_months] ),
+            dim_month[month] = LastMonth,
+            fact_headcount_monthly[active_eom] = 1
+        ),
+        12
+    )
+
+Women Share =
+VAR LastMonth = MAX ( dim_month[month] )
+RETURN
+    DIVIDE (
+        CALCULATE (
+            SUM ( fact_headcount_monthly[active_eom] ),
+            dim_month[month] = LastMonth,
+            fact_headcount_monthly[gender] = "F"
+        ),
+        [Headcount]
+    )
+
+Fixed-term Share =
+VAR LastMonth = MAX ( dim_month[month] )
+RETURN
+    DIVIDE (
+        CALCULATE (
+            SUM ( fact_headcount_monthly[active_eom] ),
+            dim_month[month] = LastMonth,
+            fact_headcount_monthly[employment_type] = "PKWT"
+        ),
+        [Headcount]
+    )
+
+Compa-ratio =
+VAR LastMonth = MAX ( dim_month[month] )
+RETURN
+    CALCULATE (
+        AVERAGE ( fact_headcount_monthly[pay_ratio] ),
+        dim_month[month] = LastMonth,
+        fact_headcount_monthly[active_eom] = 1
+    )
+
+Overtime per Person =
+AVERAGE ( fact_headcount_monthly[overtime_hours] )
+
+// --- Trailing 12 months, for a monthly trend line --------------------------------------
+
+// dim_month holds one row per month, so this filters months explicitly rather than
+// relying on a marked daily date table.
+Voluntary Turnover Rate (12m) =
+VAR LastMonth = MAX ( dim_month[month] )
+VAR FirstMonth = EDATE ( LastMonth, -11 )
+RETURN
+    CALCULATE (
+        [Voluntary Turnover Rate],
+        REMOVEFILTERS ( dim_month ),
+        dim_month[month] >= FirstMonth,
+        dim_month[month] <= LastMonth
+    )
+
+// --- Small groups ---------------------------------------------------------------------
+// The app withholds any figure resting on fewer than 5 people. Use these versions on
+// pages that slice by department, gender, age band or grade before sharing a report.
+
+Voluntary Turnover Rate (published) =
+IF ( [People] >= 5, [Voluntary Turnover Rate] )
+
+Headcount (published) =
+IF ( [Headcount] >= 5, [Headcount] )
