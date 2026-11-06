@@ -236,7 +236,7 @@ export function BarList({
           onMouseEnter={() => setHover(item.key)}
           onMouseLeave={() => setHover(null)}
           className="grid items-center gap-3 rounded px-1 py-0.5 text-[13px] hover:bg-surface-2"
-          style={{ gridTemplateColumns: `minmax(0, min(${labelWidth}, 42%)) 1fr 5.5rem` }}
+          style={{ gridTemplateColumns: `minmax(0, min(${labelWidth}, 48%)) 1fr 5.5rem` }}
           title={item.title}
         >
           <span className="min-w-0">

@@ -10,6 +10,14 @@ import type { FairnessGroup, ModelCard } from "@/lib/types";
 
 const pct = (v: number | null | undefined, d = 1) => (v === null || v === undefined ? "—" : `${(v * 100).toFixed(d)}%`);
 
+function genderRecall(groups: FairnessGroup[]): string {
+  const f = groups.find((g) => g.group === "F")?.recall;
+  const m = groups.find((g) => g.group === "M")?.recall;
+  if (f == null || m == null) return "";
+  const gap = Math.abs(f - m) >= 0.05 ? " That gap is worth investigating before the list is used." : "";
+  return `Of the people who resigned, ${pct(f, 0)} of women and ${pct(m, 0)} of men had been flagged.${gap} `;
+}
+
 /** How much of the way from the random baseline to the ceiling a score has come. */
 const share = (score: number, random: number, ceiling: number) =>
   ceiling > random ? `${Math.round(((score - random) / (ceiling - random)) * 100)}%` : "—";
@@ -119,7 +127,7 @@ export function ModelView() {
             </p>
           </div>
         </Panel>
-        <Panel title="Calibration" description="Test months, grouped by predicted probability. On the dashed line, predicted equals observed.">
+        <Panel title="Calibration" description="Test months in ten equal groups by score. On the dashed line, predicted equals observed.">
           <CalibrationPlot
             points={data.calibration.map((c) => ({ key: String(c.bucket), predicted: c.predicted, observed: c.observed, n: c.n }))}
           />
@@ -138,12 +146,13 @@ export function ModelView() {
         </Panel>
         <Panel
           title="Bias audit"
-          description={`Flags are the top 10% of scores on the test months (threshold ${pct(data.fairness.threshold_top_10pct, 1)}). Equal flag rates are not the aim when underlying rates differ; the check is whether predictions track what happened in each group.`}
+          description={`Flags are the top 10% of scores on the test months (raw score above ${data.fairness.threshold_top_10pct.toFixed(3)}). Equal flag rates are not the aim when underlying rates differ; the check is whether predictions track what happened in each group.`}
         >
           <div className="space-y-5">
             <FairnessTable title="Gender" groups={data.fairness.gender.groups} ratio={data.fairness.gender.flag_rate_ratio_min_max} />
             <FairnessTable title="Age band" groups={data.fairness.age_band.groups} ratio={data.fairness.age_band.flag_rate_ratio_min_max} />
             <p className="text-[12.5px] text-fg-2">
+              {genderRecall(data.fairness.gender.groups)}
               Younger staff are flagged more often because they resign more often and are earlier in their tenure, which
               the model uses. Where mean predicted sits well below the observed rate for a group, the model
               under-predicts for that group; that gap, not the flag rate, is what to watch when retraining.
