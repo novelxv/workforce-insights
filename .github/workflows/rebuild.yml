@@ -1,0 +1,32 @@
+name: Rebuild warehouse and rescore
+
+# Re-runs the simulation up to the last full month, reloads the star schema, retrains
+# the model and writes new scores. Manual on purpose: the figures in the README and the
+# model card come from a specific run, and a scheduled rebuild would quietly move them.
+on:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: api
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: api/pyproject.toml
+      - run: pip install -e ".[pipeline]"
+      - name: Build
+        env:
+          # Direct (unpooled) Neon connection: COPY does not go through PgBouncer.
+          DATABASE_URL: ${{ secrets.WAREHOUSE_DATABASE_URL }}
+          DEMO_PASSWORD: ${{ secrets.DEMO_PASSWORD }}
+        run: python -m pipeline.build
+      - uses: actions/upload-artifact@v4
+        with:
+          name: model-card
+          path: docs/*.md
